@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self Check: Logarithmic Properties</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Simple icon components using SVG
+        const CheckCircle = ({ className, size = 20 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9 12l2 2 4-4"/>
+            </svg>
+        );
+
+        const AlertCircle = ({ className, size = 20 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        );
+
+        const Eye = ({ className, size = 20 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+        );
+
+        const Lightbulb = ({ size = 16 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18h6"/>
+                <path d="M10 22h4"/>
+                <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+            </svg>
+        );
+
+        const Save = ({ size = 20 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+            </svg>
+        );
+
+        const SteppedSelfCheck = () => {
+            const [answers, setAnswers] = useState({
+                step1: '',
+                step2a: '',
+                step2b: '',
+                step3a: '',
+                step3b: '',
+                step4a: '',
+                step4b: '',
+                step4c: '',
+                step5: '',
+                step6: ''
+            });
+
+            const [stepStatus, setStepStatus] = useState({
+                1: 'incomplete',
+                2: 'incomplete',
+                3: 'incomplete',
+                4: 'incomplete',
+                5: 'incomplete',
+                6: 'incomplete'
+            });
+
+            const [feedback, setFeedback] = useState({});
+            const [showHint, setShowHint] = useState({});
+            const [attempts, setAttempts] = useState(0);
+            const [stepAttempts, setStepAttempts] = useState({
+                1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0
+            });
+            const [giveUpRevealed, setGiveUpRevealed] = useState({});
+
+            const checkStep = (step) => {
+                let isCorrect = false;
+                let feedbackMsg = '';
+
+                const newStepAttempts = {...stepAttempts, [step]: stepAttempts[step] + 1};
+                setStepAttempts(newStepAttempts);
+
+                switch(step) {
+                    case 1:
+                        const ans1 = answers.step1.replace(/\s/g, '').toLowerCase();
+                        const has1over2 = ans1.includes('1/2') || ans1.includes('(1/2)');
+                        const hasY2 = ans1.includes('y^2') || ans1.includes('y²');
+                        const has121 = ans1.includes('121');
+                        const hasY9 = ans1.includes('y+9');
+                        const hasY11 = ans1.includes('y+11');
+                        const hasExponent = ans1.includes('^(1/2)') || ans1.includes('^1/2');
+                        
+                        isCorrect = has1over2 && hasY2 && has121 && hasY9 && hasY11 && hasExponent;
+                        
+                        if (isCorrect) {
+                            feedbackMsg = "Perfect! You correctly rewrote the square root as an exponent of 1/2.";
+                            setStepStatus({...stepStatus, 1: 'correct'});
+                        } else if (ans1.includes('sqrt') || ans1.includes('√')) {
+                            feedbackMsg = "You still have a square root symbol. Remember: √x = x^(1/2). Try rewriting the entire square root as a power.";
+                            setStepStatus({...stepStatus, 1: 'incorrect'});
+                        } else if (!hasExponent) {
+                            feedbackMsg = "Make sure to write the exponent 1/2 at the end: (entire expression)^(1/2).";
+                            setStepStatus({...stepStatus, 1: 'incorrect'});
+                        } else if (!hasY2 || !has121) {
+                            feedbackMsg = "You're missing part of the first factor: (y²-121). Make sure to include all terms.";
+                            setStepStatus({...stepStatus, 1: 'incorrect'});
+                        } else if (!hasY9) {
+                            feedbackMsg = "You're missing (y+9) with its exponent. Make sure to include (y+9)^3 in your expression.";
+                            setStepStatus({...stepStatus, 1: 'incorrect'});
+                        } else if (!hasY11) {
+                            feedbackMsg = "Don't forget the denominator (y+11). The entire fraction should be raised to the power 1/2.";
+                            setStepStatus({...stepStatus, 1: 'incorrect'});
+                        } else {
+                            feedbackMsg = "Close, but you're missing something. The complete expression should be: ((y²-121)(y+9)³/(y+11))^(1/2)";
+                            setStepStatus({...stepStatus, 1: 'incorrect'});
+                        }
+                        break;
+
+                    case 2:
+                        const ans2a = answers.step2a.replace(/\s/g, '');
+                        const ans2b = answers.step2b.replace(/\s/g, '').toLowerCase();
+                        
+                        const has2a1over2 = ans2a === '1/2' || ans2a === '(1/2)';
+                        const has2bY2 = ans2b.includes('y^2') || ans2b.includes('y²');
+                        const has2b121 = ans2b.includes('121');
+                        const has2bY9 = ans2b.includes('y+9');
+                        const has2bY11 = ans2b.includes('y+11');
+                        
+                        // Check for proper exponent notation on (y+9)
+                        const has2bY9with3 = ans2b.includes('(y+9)^3') || ans2b.includes('(y+9)³');
+                        
+                        isCorrect = has2a1over2 && has2bY2 && has2b121 && has2bY9with3 && has2bY11;
+                        
+                        if (isCorrect) {
+                            feedbackMsg = "Excellent! You correctly applied the power rule: ln(x^a) = a·ln(x). The 1/2 comes out front and the entire fraction stays inside the ln.";
+                            setStepStatus({...stepStatus, 2: 'correct'});
+                        } else if (!has2a1over2) {
+                            feedbackMsg = "The coefficient should be exactly 1/2. Remember the power rule: ln(x^a) = a·ln(x), so the exponent 1/2 moves out front.";
+                            setStepStatus({...stepStatus, 2: 'incorrect'});
+                        } else if (has2bY9 && !has2bY9with3) {
+                            feedbackMsg = "The exponent 3 on (y+9) must be written properly as (y+9)^3, not just (y+9)3. Use the caret symbol (^) for exponents.";
+                            setStepStatus({...stepStatus, 2: 'incorrect'});
+                        } else if (!has2bY11 && has2bY2 && has2bY9) {
+                            feedbackMsg = "You're missing the denominator! The entire expression (y²-121)(y+9)³/(y+11) should stay inside the ln. Only the exponent 1/2 moves out front.";
+                            setStepStatus({...stepStatus, 2: 'incorrect'});
+                        } else if (!has2bY2 || !has2b121) {
+                            feedbackMsg = "You're missing part of the first factor (y²-121). Make sure to include the complete numerator.";
+                            setStepStatus({...stepStatus, 2: 'incorrect'});
+                        } else if (!has2bY9) {
+                            feedbackMsg = "Don't forget (y+9)³ - both the base and the exponent 3 are important!";
+                            setStepStatus({...stepStatus, 2: 'incorrect'});
+                        } else {
+                            feedbackMsg = "Make sure you include the complete expression with proper exponent notation: 1/2 · ln((y²-121)(y+9)^3/(y+11))";
+                            setStepStatus({...stepStatus, 2: 'incorrect'});
+                        }
+                        break;
+
+                    case 3:
+                        const ans3a = answers.step3a.replace(/\s/g, '').toLowerCase();
+                        const ans3b = answers.step3b.replace(/\s/g, '').toLowerCase();
+                        
+                        const has3aY2 = ans3a.includes('y^2') || ans3a.includes('y²');
+                        const has3a121 = ans3a.includes('121');
+                        const has3aY9 = ans3a.includes('y+9');
+                        
+                        // Check for proper exponent notation on (y+9)
+                        const has3aY9with3 = ans3a.includes('(y+9)^3') || ans3a.includes('(y+9)³');
+                        
+                        const has3bY11 = ans3b.includes('y+11');
+                        const has3bCorrect = ans3b === 'y+11' || ans3b === '(y+11)';
+                        
+                        isCorrect = has3aY2 && has3a121 && has3aY9with3 && has3bCorrect;
+                        
+                        if (isCorrect) {
+                            feedbackMsg = "Great work! You correctly applied the quotient rule: ln(a/b) = ln(a) - ln(b).";
+                            setStepStatus({...stepStatus, 3: 'correct'});
+                        } else if ((answers.step3a + answers.step3b).includes('/')) {
+                            feedbackMsg = "I see you're still using division. The quotient rule says ln(a/b) = ln(a) - ln(b). Division INSIDE the log becomes SUBTRACTION outside the log.";
+                            setStepStatus({...stepStatus, 3: 'incorrect'});
+                        } else if (has3aY9 && !has3aY9with3) {
+                            feedbackMsg = "The exponent 3 on (y+9) must be written properly as (y+9)^3, not just (y+9)3. Use the caret symbol (^) for exponents.";
+                            setStepStatus({...stepStatus, 3: 'incorrect'});
+                        } else if (!has3aY2 || !has3a121) {
+                            feedbackMsg = "The numerator should include (y²-121). Make sure you have both terms from the first factor.";
+                            setStepStatus({...stepStatus, 3: 'incorrect'});
+                        } else if (!has3aY9) {
+                            feedbackMsg = "Don't forget (y+9)³ in the numerator - you need both the base and exponent!";
+                            setStepStatus({...stepStatus, 3: 'incorrect'});
+                        } else if (!has3bY11) {
+                            feedbackMsg = "The denominator should be (y+11). Remember: ln(numerator/denominator) = ln(numerator) - ln(denominator).";
+                            setStepStatus({...stepStatus, 3: 'incorrect'});
+                        } else {
+                            feedbackMsg = "Almost there! The numerator should be (y²-121)(y+9)^3 and the denominator should be (y+11).";
+                            setStepStatus({...stepStatus, 3: 'incorrect'});
+                        }
+                        break;
+
+                    case 4:
+                        const ans4a = answers.step4a.replace(/\s/g, '').toLowerCase();
+                        const ans4b = answers.step4b.replace(/\s/g, '').toLowerCase();
+                        const ans4c = answers.step4c.replace(/\s/g, '').toLowerCase();
+                        
+                        const has4aY2 = ans4a.includes('y^2') || ans4a.includes('y²');
+                        const has4a121 = ans4a.includes('121');
+                        const has4aCorrect = has4aY2 && has4a121 && (ans4a === 'y^2-121' || ans4a === 'y²-121' || ans4a === '(y^2-121)' || ans4a === '(y²-121)');
+                        
+                        const has4bY9 = ans4b.includes('y+9');
+                        const has4b3 = ans4b.includes('3') || ans4b.includes('^3');
+                        const has4bCorrect = has4bY9 && has4b3;
+                        
+                        const has4cCorrect = ans4c === 'y+11' || ans4c === '(y+11)';
+                        
+                        isCorrect = has4aCorrect && has4bCorrect && has4cCorrect;
+                        
+                        if (isCorrect) {
+                            feedbackMsg = "Nice! You correctly applied the product rule: ln(ab) = ln(a) + ln(b).";
+                            setStepStatus({...stepStatus, 4: 'correct'});
+                        } else if (!(answers.step4a + answers.step4b).includes('+')) {
+                            feedbackMsg = "Remember the product rule: ln(ab) = ln(a) + ln(b). Multiplication inside becomes addition outside.";
+                            setStepStatus({...stepStatus, 4: 'incorrect'});
+                        } else if (!has4aY2 || !has4a121) {
+                            feedbackMsg = "The first factor should be (y²-121). Make sure to include both the y² and the -121.";
+                            setStepStatus({...stepStatus, 4: 'incorrect'});
+                        } else if (!has4bY9) {
+                            feedbackMsg = "The second factor should include (y+9). Don't forget this term!";
+                            setStepStatus({...stepStatus, 4: 'incorrect'});
+                        } else if (!has4b3) {
+                            feedbackMsg = "Don't forget the exponent 3 on (y+9)³!";
+                            setStepStatus({...stepStatus, 4: 'incorrect'});
+                        } else if (!has4cCorrect) {
+                            feedbackMsg = "The denominator should be (y+11). Remember: we're still subtracting ln(y+11) at the end.";
+                            setStepStatus({...stepStatus, 4: 'incorrect'});
+                        } else {
+                            feedbackMsg = "Close! The three terms should be: ln(y²-121) + ln((y+9)³) - ln(y+11).";
+                            setStepStatus({...stepStatus, 4: 'incorrect'});
+                        }
+                        break;
+
+                    case 5:
+                        const ans5 = answers.step5.replace(/\s/g, '').toLowerCase();
+                        
+                        // Must have 1/2 multiplying the whole thing
+                        const has5_1over2 = ans5.startsWith('1/2') || ans5.startsWith('(1/2)');
+                        
+                        // Must have 3ln(y+9) - the exponent moved out front
+                        const has5_3lnY9 = ans5.includes('3ln(y+9)') || ans5.includes('3·ln(y+9)') || ans5.includes('3*ln(y+9)');
+                        
+                        // Must have ln(y^2-121) or ln(y²-121)
+                        const has5_lnY2_121 = ans5.includes('ln(y^2-121)') || ans5.includes('ln(y²-121)');
+                        
+                        // Must have ln(y+11)
+                        const has5_lnY11 = ans5.includes('ln(y+11)');
+                        
+                        // Must have proper operators
+                        const has5_plus = ans5.includes('+');
+                        const has5_minus = ans5.includes('-');
+                        
+                        // Check that exponent is NOT still inside ln for (y+9)
+                        const stillHasExponentInside = ans5.includes('ln(y+9)^3') || ans5.includes('ln((y+9)^3)') || ans5.includes('ln(y+9)3');
+                        
+                        // Check for random numbers that shouldn't be there
+                        const cleanAns5 = ans5.replace(/1\/2/g, '').replace(/ln/g, '').replace(/y\+9/g, '').replace(/y\+11/g, '').replace(/y\^2-121/g, '').replace(/y²-121/g, '');
+                        const hasOnlyValidChars = /^[\(\)\+\-\*·3]*$/.test(cleanAns5);
+                        
+                        isCorrect = has5_1over2 && has5_3lnY9 && has5_lnY2_121 && has5_lnY11 && has5_plus && has5_minus && !stillHasExponentInside && hasOnlyValidChars;
+                        
+                        if (isCorrect) {
+                            feedbackMsg = "Excellent! You correctly moved the exponents out front. Remember that 1/2 multiplies everything!";
+                            setStepStatus({...stepStatus, 5: 'correct'});
+                        } else if (stillHasExponentInside) {
+                            feedbackMsg = "You still have an exponent inside the logarithm. Use the power rule: ln(x^a) = a·ln(x). So ln((y+9)³) = 3·ln(y+9).";
+                            setStepStatus({...stepStatus, 5: 'incorrect'});
+                        } else if (!hasOnlyValidChars) {
+                            feedbackMsg = "Your answer has extra numbers or characters that don't belong. Check your expression carefully.";
+                            setStepStatus({...stepStatus, 5: 'incorrect'});
+                        } else if (!has5_3lnY9) {
+                            feedbackMsg = "The exponent 3 from (y+9)³ should come out in front: 3·ln(y+9) or 3ln(y+9). Make sure to apply the power rule!";
+                            setStepStatus({...stepStatus, 5: 'incorrect'});
+                        } else if (!has5_1over2) {
+                            feedbackMsg = "Don't forget that 1/2 from Step 2 should be at the beginning, multiplying EVERYTHING in the parentheses.";
+                            setStepStatus({...stepStatus, 5: 'incorrect'});
+                        } else if (!has5_lnY2_121 || !has5_lnY11) {
+                            feedbackMsg = "Make sure you have all three logarithm terms: ln(y²-121), 3ln(y+9), and ln(y+11).";
+                            setStepStatus({...stepStatus, 5: 'incorrect'});
+                        } else if (!has5_plus || !has5_minus) {
+                            feedbackMsg = "Remember to keep the + and - signs: ln(y²-121) + 3ln(y+9) - ln(y+11).";
+                            setStepStatus({...stepStatus, 5: 'incorrect'});
+                        } else {
+                            feedbackMsg = "Close! The answer should be: 1/2(ln(y²-121) + 3ln(y+9) - ln(y+11))";
+                            setStepStatus({...stepStatus, 5: 'incorrect'});
+                        }
+                        break;
+
+                    case 6:
+                        const ans6 = answers.step6.replace(/\s/g, '').toLowerCase();
+                        
+                        const has6_1over2 = ans6.includes('1/2');
+                        const has6_lnY11_twice = (ans6.match(/ln\(y\+11\)/g) || []).length === 2;
+                        const has6_lnYminus11 = ans6.includes('ln(y-11)');
+                        const has6_lnYplus11 = ans6.includes('ln(y+11)');
+                        const has6_3lnY9 = ans6.includes('3ln(y+9)');
+                        const has6_plus = ans6.includes('+');
+                        const has6_minus = ans6.includes('-');
+                        
+                        // Should NOT have y^2-121 anymore
+                        const stillHasY2 = ans6.includes('y^2-121') || ans6.includes('y²-121');
+                        
+                        isCorrect = has6_1over2 && has6_lnYminus11 && has6_lnYplus11 && has6_3lnY9 && has6_plus && has6_minus && !stillHasY2;
+                        
+                        if (isCorrect) {
+                            feedbackMsg = "Perfect! You correctly factored y²-121 = (y-11)(y+11) and simplified. Great work!";
+                            setStepStatus({...stepStatus, 6: 'correct'});
+                        } else if (stillHasY2) {
+                            feedbackMsg = "You can simplify further! Notice that y²-121 is a difference of squares: y²-121 = (y-11)(y+11). Use the product rule to expand this into ln(y-11) + ln(y+11).";
+                            setStepStatus({...stepStatus, 6: 'incorrect'});
+                        } else if (!has6_lnYminus11) {
+                            feedbackMsg = "You're missing ln(y-11). When you factor y²-121 = (y-11)(y+11), you should get both ln(y-11) and ln(y+11).";
+                            setStepStatus({...stepStatus, 6: 'incorrect'});
+                        } else if (!has6_lnYplus11) {
+                            feedbackMsg = "You're missing ln(y+11) from the factorization. Remember: y²-121 = (y-11)(y+11) becomes ln(y-11) + ln(y+11).";
+                            setStepStatus({...stepStatus, 6: 'incorrect'});
+                        } else if (!has6_3lnY9) {
+                            feedbackMsg = "Don't forget the 3ln(y+9) term! It should still be there from the previous step.";
+                            setStepStatus({...stepStatus, 6: 'incorrect'});
+                        } else if (!has6_1over2) {
+                            feedbackMsg = "The 1/2 coefficient should still be multiplying everything!";
+                            setStepStatus({...stepStatus, 6: 'incorrect'});
+                        } else {
+                            feedbackMsg = "Almost! The final answer should be: 1/2(ln(y-11) + ln(y+11) + 3ln(y+9) - ln(y+11))";
+                            setStepStatus({...stepStatus, 6: 'incorrect'});
+                        }
+                        break;
+                }
+
+                setFeedback({...feedback, [step]: feedbackMsg});
+                setAttempts(attempts + 1);
+            };
+
+            const revealAnswer = (step) => {
+                setGiveUpRevealed({...giveUpRevealed, [step]: true});
+                setStepStatus({...stepStatus, [step]: 'revealed'});
+
+                const explanations = {
+                    1: "The square root is rewritten as an exponent: √(expression) = (expression)^(1/2)",
+                    2: "Using the power rule ln(x^a) = a·ln(x), we move the 1/2 exponent out front.",
+                    3: "The quotient rule ln(a/b) = ln(a) - ln(b) separates the numerator and denominator.",
+                    4: "The product rule ln(ab) = ln(a) + ln(b) separates the factors in the numerator.",
+                    5: "All exponents move out front using the power rule, and 1/2 multiplies everything.",
+                    6: "Factor y²-121 as (y-11)(y+11) and expand using the product rule again."
+                };
+
+                const correctValues = {
+                    1: {step1: '((y^2-121)(y+9)^3/(y+11))^(1/2)'},
+                    2: {step2a: '1/2', step2b: '(y^2-121)(y+9)^3/(y+11)'},
+                    3: {step3a: '(y^2-121)(y+9)^3', step3b: 'y+11'},
+                    4: {step4a: 'y^2-121', step4b: '(y+9)^3', step4c: 'y+11'},
+                    5: {step5: '1/2(ln(y^2-121) + 3ln(y+9) - ln(y+11))'},
+                    6: {step6: '1/2(ln(y-11) + ln(y+11) + 3ln(y+9) - ln(y+11))'}
+                };
+
+                setAnswers({...answers, ...correctValues[step]});
+                setFeedback({...feedback, [step]: `✓ Answer revealed: ${explanations[step]}`});
+            };
+
+            const handleInputChange = (field, value) => {
+                setAnswers({...answers, [field]: value});
+            };
+
+            const renderStep = (stepNum) => {
+                const statusIcon = {
+                    'correct': <CheckCircle className="text-green-600" size={20} />,
+                    'incorrect': <AlertCircle className="text-red-600" size={20} />,
+                    'incomplete': null,
+                    'revealed': <Eye className="text-orange-600" size={20} />
+                };
+
+                const stepContent = {
+                    1: (
+                        <div className="space-y-4">
+                            <p className="text-gray-700">The square root can be written as an exponent of 1/2. Rewrite the expression inside the ln:</p>
+                            <input
+                                type="text"
+                                value={answers.step1}
+                                onChange={(e) => handleInputChange('step1', e.target.value)}
+                                placeholder="e.g., (expression)^(1/2)"
+                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                            />
+                        </div>
+                    ),
+                    2: (
+                        <div className="space-y-4">
+                            <p className="text-gray-700">Move the exponent (1/2) in front of the logarithm using the power rule:</p>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={answers.step2a}
+                                    onChange={(e) => handleInputChange('step2a', e.target.value)}
+                                    placeholder="coefficient"
+                                    className="w-24 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                                />
+                                <span className="text-xl">·</span>
+                                <span className="text-xl">ln(</span>
+                                <input
+                                    type="text"
+                                    value={answers.step2b}
+                                    onChange={(e) => handleInputChange('step2b', e.target.value)}
+                                    placeholder="expression inside"
+                                    className="flex-1 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                                />
+                                <span className="text-xl">)</span>
+                            </div>
+                        </div>
+                    ),
+                    3: (
+                        <div className="space-y-4">
+                            <p className="text-gray-700">Separate the numerator and denominator using the quotient rule:</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-lg">1/2 · (</span>
+                                <span className="text-lg">ln(</span>
+                                <input
+                                    type="text"
+                                    value={answers.step3a}
+                                    onChange={(e) => handleInputChange('step3a', e.target.value)}
+                                    placeholder="numerator"
+                                    className="w-64 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                                />
+                                <span className="text-lg">)</span>
+                                <span className="text-lg">-</span>
+                                <span className="text-lg">ln(</span>
+                                <input
+                                    type="text"
+                                    value={answers.step3b}
+                                    onChange={(e) => handleInputChange('step3b', e.target.value)}
+                                    placeholder="denominator"
+                                    className="w-32 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                                />
+                                <span className="text-lg">)</span>
+                                <span className="text-lg">)</span>
+                            </div>
+                        </div>
+                    ),
+                    4: (
+                        <div className="space-y-4">
+                            <p className="text-gray-700">Separate the factors in the numerator using the product rule:</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-lg">1/2 · (</span>
+                                <span className="text-lg">ln(</span>
+                                <input
+                                    type="text"
+                                    value={answers.step4a}
+                                    onChange={(e) => handleInputChange('step4a', e.target.value)}
+                                    placeholder="factor 1"
+                                    className="w-32 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                                />
+                                <span className="text-lg">)</span>
+                                <span className="text-lg">+</span>
+                                <span className="text-lg">ln(</span>
+                                <input
+                                    type="text"
+                                    value={answers.step4b}
+                                    onChange={(e) => handleInputChange('step4b', e.target.value)}
+                                    placeholder="factor 2"
+                                    className="w-32 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                                />
+                                <span className="text-lg">)</span>
+                                <span className="text-lg">-</span>
+                                <span className="text-lg">ln(</span>
+                                <input
+                                    type="text"
+                                    value={answers.step4c}
+                                    onChange={(e) => handleInputChange('step4c', e.target.value)}
+                                    placeholder="denominator"
+                                    className="w-32 p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                                />
+                                <span className="text-lg">)</span>
+                                <span className="text-lg">)</span>
+                            </div>
+                        </div>
+                    ),
+                    5: (
+                        <div className="space-y-4">
+                            <p className="text-gray-700">Move any exponents in front of their logarithms and distribute the 1/2:</p>
+                            <input
+                                type="text"
+                                value={answers.step5}
+                                onChange={(e) => handleInputChange('step5', e.target.value)}
+                                placeholder="e.g., 1/2(ln(...) + 3ln(...) - ln(...))"
+                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                            />
+                        </div>
+                    ),
+                    6: (
+                        <div className="space-y-4">
+                            <p className="text-gray-700">Note that y² - 121 = (y-11)(y+11). Expand and simplify your final answer:</p>
+                            <input
+                                type="text"
+                                value={answers.step6}
+                                onChange={(e) => handleInputChange('step6', e.target.value)}
+                                placeholder="Final expanded form"
+                                className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none font-mono"
+                            />
+                        </div>
+                    )
+                };
+
+                const hints = {
+                    1: "Think: √x can be written as x^(1/2). Apply this to the entire expression under the square root.",
+                    2: "Use the power rule: ln(x^a) = a·ln(x). The exponent 1/2 should come out in front.",
+                    3: "The quotient rule says: ln(a/b) = ln(a) - ln(b). Division becomes subtraction!",
+                    4: "The product rule says: ln(ab) = ln(a) + ln(b). Separate the three factors: (y²-121), (y+9)³, and keep track of the denominator.",
+                    5: "Move ALL exponents out front: ln(x^a) = a·ln(x). Don't forget: 1/2 multiplies everything!",
+                    6: "Notice that y²-121 is a difference of squares: a²-b² = (a-b)(a+b). Here: y²-11² = (y-11)(y+11)."
+                };
+
+                return (
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-4 border-l-4 border-blue-500">
+                        <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                {statusIcon[stepStatus[stepNum]]}
+                                <h3 className="text-lg font-semibold text-gray-800">Step {stepNum}</h3>
+                            </div>
+                            <button
+                                onClick={() => setShowHint({...showHint, [stepNum]: !showHint[stepNum]})}
+                                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                                <Lightbulb size={16} />
+                                {showHint[stepNum] ? 'Hide Hint' : 'Hint'}
+                            </button>
+                        </div>
+
+                        {showHint[stepNum] && (
+                            <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm text-gray-700">
+                                💡 {hints[stepNum]}
+                            </div>
+                        )}
+
+                        {stepContent[stepNum]}
+
+                        {feedback[stepNum] && (
+                            <div className={`mt-4 p-3 rounded-lg border-l-4 ${
+                                stepStatus[stepNum] === 'correct'
+                                    ? 'bg-green-50 border-green-500 text-green-800'
+                                    : stepStatus[stepNum] === 'revealed'
+                                    ? 'bg-orange-50 border-orange-500 text-orange-800'
+                                    : 'bg-red-50 border-red-500 text-red-800'
+                            }`}>
+                                {feedback[stepNum]}
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 mt-4">
+                            <button
+                                onClick={() => checkStep(stepNum)}
+                                disabled={stepStatus[stepNum] === 'correct' || stepStatus[stepNum] === 'revealed'}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            >
+                                Check Step {stepNum}
+                            </button>
+
+                            {stepAttempts[stepNum] >= 3 && stepStatus[stepNum] !== 'correct' && stepStatus[stepNum] !== 'revealed' && (
+                                <button
+                                    onClick={() => revealAnswer(stepNum)}
+                                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
+                                >
+                                    <Eye size={16} />
+                                    I give up - Show me
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            const allStepsComplete = Object.values(stepStatus).every(s => s === 'correct' || s === 'revealed');
+            const correctSteps = Object.values(stepStatus).filter(s => s === 'correct').length;
+            const revealedSteps = Object.values(stepStatus).filter(s => s === 'revealed').length;
+
+            return (
+                <div className="max-w-4xl mx-auto p-6 bg-gray-50 min-h-screen">
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <div className="flex items-center justify-between mb-2">
+                            <h1 className="text-2xl font-bold text-gray-800">Self Check: Logarithmic Properties</h1>
+                            <div className="text-sm text-gray-600">
+                                Score: 1.5/5 | Answered: 2/5
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="sticky top-0 z-40 bg-white rounded-lg shadow-md p-6 mb-6 border-b-4 border-blue-500">
+                        <h2 className="font-semibold text-gray-800 mb-4">Question 3</h2>
+                        <p className="text-gray-700 mb-4">
+                            Use the rules for logarithms to expand the following expression. Write your answer in simplified form.
+                        </p>
+                        <div className="flex justify-center p-8 bg-gray-50 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="520" height="120" viewBox="0 0 520 120" className="max-w-full h-auto">
+                                <text x="30" y="70" fontFamily="Georgia, serif" fontSize="40" fill="#000">ln</text>
+                                <text x="75" y="70" fontFamily="Georgia, serif" fontSize="56" fill="#000">(</text>
+                                <path d="M 110 75 L 120 85 L 130 45 L 430 45"
+                                      stroke="#000"
+                                      strokeWidth="2.5"
+                                      fill="none"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"/>
+                                <text x="145" y="75" fontFamily="Georgia, serif" fontSize="32" fill="#000">(</text>
+                                <text x="160" y="75" fontFamily="Georgia, serif" fontSize="32" fill="#000">y</text>
+                                <text x="182" y="60" fontFamily="Georgia, serif" fontSize="22" fill="#000">2</text>
+                                <text x="200" y="75" fontFamily="Georgia, serif" fontSize="32" fill="#000">− 121)(</text>
+                                <text x="300" y="75" fontFamily="Georgia, serif" fontSize="32" fill="#000">y</text>
+                                <text x="320" y="75" fontFamily="Georgia, serif" fontSize="32" fill="#000">+ 9)</text>
+                                <text x="388" y="55" fontFamily="Georgia, serif" fontSize="24" fill="#000">3</text>
+                                <line x1="145" y1="90" x2="410" y2="90" stroke="#000" strokeWidth="2"/>
+                                <text x="230" y="115" fontFamily="Georgia, serif" fontSize="32" fill="#000">y</text>
+                                <text x="250" y="115" fontFamily="Georgia, serif" fontSize="32" fill="#000">+ 11</text>
+                                <text x="445" y="70" fontFamily="Georgia, serif" fontSize="56" fill="#000">)</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    {[1, 2, 3, 4, 5, 6].map(step => renderStep(step))}
+
+                    <div className="flex gap-4 mt-6">
+                        <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled={!allStepsComplete}
+                        >
+                            <CheckCircle size={20} />
+                            Submit Answer
+                        </button>
+                        <button className="flex items-center gap-2 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                            <Save size={20} />
+                            Save Progress
+                        </button>
+                        <button className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                            <Eye size={20} />
+                            Watch Video
+                        </button>
+                    </div>
+
+                    {allStepsComplete && (
+                        <div className="mt-6 p-4 bg-green-50 border-2 border-green-500 rounded-lg">
+                            <h3 className="font-semibold text-green-800 mb-2">
+                                {revealedSteps === 0 ? '🎉 Excellent work!' : '✓ All steps complete!'}
+                            </h3>
+                            {revealedSteps === 0 ? (
+                                <>
+                                    <p className="text-green-700">
+                                        You've successfully worked through all the steps on your own. You've shown you understand:
+                                    </p>
+                                    <ul className="list-disc list-inside text-green-700 mt-2 space-y-1">
+                                        <li>Converting roots to exponents</li>
+                                        <li>The power rule for logarithms</li>
+                                        <li>The quotient rule for logarithms</li>
+                                        <li>The product rule for logarithms</li>
+                                        <li>Factoring difference of squares</li>
+                                    </ul>
+                                    <p className="text-green-700 mt-3 font-semibold">
+                                        Ready to submit your final answer!
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-gray-700">
+                                        You've worked through all the steps. You got {correctSteps} step{correctSteps !== 1 ? 's' : ''} correct on your own,
+                                        and reviewed {revealedSteps} revealed answer{revealedSteps !== 1 ? 's' : ''}.
+                                    </p>
+                                    <p className="text-gray-700 mt-2">
+                                        <strong>Learning tip:</strong> Review the revealed steps and try a similar problem to practice those concepts.
+                                        Understanding <em>why</em> each step works is more important than getting every answer right the first time!
+                                    </p>
+                                    <p className="text-gray-700 mt-3 font-semibold">
+                                        Ready to submit your answer.
+                                    </p>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {attempts > 0 && (
+                        <div className="mt-4 text-sm text-gray-600 text-center">
+                            You've made {attempts} attempt{attempts !== 1 ? 's' : ''} so far. Keep going!
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<SteppedSelfCheck />);
+    </script>
+</body>
+</html>
